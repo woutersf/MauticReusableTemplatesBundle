@@ -17,6 +17,7 @@ class ReusableTemplate
     private $createdAt;
     private $updatedAt;
     private $updatedBy;
+    private $changed;
 
     public static function loadMetadata(ORM\ClassMetadata $metadata): void
     {
@@ -48,6 +49,10 @@ class ReusableTemplate
         $builder->createField('updatedBy', 'integer')
             ->columnName('updated_by')
             ->nullable()
+            ->build();
+
+        $builder->createField('changed', 'boolean')
+            ->columnName('changed')
             ->build();
     }
 
@@ -108,6 +113,17 @@ class ReusableTemplate
     public function setUpdatedBy(?int $updatedBy): self
     {
         $this->updatedBy = $updatedBy;
+        return $this;
+    }
+
+    public function getChanged(): bool
+    {
+        return (bool) $this->changed;
+    }
+
+    public function setChanged(bool $changed): self
+    {
+        $this->changed = $changed;
         return $this;
     }
 }

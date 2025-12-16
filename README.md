@@ -10,6 +10,9 @@ A Mautic integration for managing reusable HTML email templates that can be used
 - Simple interface for template creation and editing
 - Store and organize template content
 - Menu item appears under "Channels" section
+- GrapeJS integration for drag-and-drop email building
+
+![Overview](Assets/overview.png)
 
 ## Installation
 
@@ -31,11 +34,13 @@ A Mautic integration for managing reusable HTML email templates that can be used
 
 ## Usage
 
-After installation and enabling the integration, you'll find a new "Reusable Email Parts" menu item under the Channels section in your Mautic navigation.
+After installation and enabling the integration, you'll find the "Reusable" menu in your Mautic admin navigation with "Email parts" as a submenu item.
+
+![Admin Menu](Assets/menu.png)
 
 ### Creating an Email Part
 
-1. Navigate to "Reusable Email Parts" in the Channels menu
+1. Navigate to "Reusable" → "Email parts" in the admin menu
 2. Click "New" to create a new email part
 3. Enter a name for your email part
 4. Add your HTML content in the content field
@@ -61,6 +66,29 @@ The plugin creates a `reusable_templates` table with the following fields:
 ## Access URL
 
 The plugin is accessible at: `/s/reusabletemplates`
+
+## Cronjob Setup
+
+To enable automatic email content updates when templates change, add the following cronjob to run every minute:
+
+```bash
+* * * * * php /path/to/mautic/bin/console mautic:reusabletemplates:process
+```
+
+Replace `/path/to/mautic` with your actual Mautic installation path.
+
+### What the cronjob does:
+- Checks for templates marked as "changed"
+- Processes each changed template
+- Updates all emails using those templates (logic to be implemented)
+- Resets the "changed" flag after processing
+
+### Manual execution:
+You can also run the command manually:
+
+```bash
+php bin/console mautic:reusabletemplates:process
+```
 
 ## Version
 

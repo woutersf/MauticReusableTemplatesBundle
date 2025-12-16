@@ -10,6 +10,12 @@ return [
     'icon'        => 'plugins/MauticReusableTemplatesBundle/Assets/reusable.png',
 
     'routes' => [
+        'public' => [
+            'mautic_reusabletemplate_api_templates' => [
+                'path'       => '/reusabletemplates/api/list',
+                'controller' => 'MauticPlugin\MauticReusableTemplatesBundle\Controller\ApiController::getTemplatesAction',
+            ],
+        ],
         'main' => [
             'mautic_reusabletemplate_template_index' => [
                 'path'       => '/reusabletemplates/{page}',
@@ -29,12 +35,24 @@ return [
     ],
 
     'menu' => [
-        'main' => [
-            'mautic.reusabletemplate.menu.index' => [
-                'route'     => 'mautic_reusabletemplate_template_index',
+        'admin' => [
+            'mautic.reusabletemplate.menu.root' => [
+                'id'        => 'mautic_reusabletemplate_root',
                 'iconClass' => 'ri-file-copy-line',
-                'parent'    => 'mautic.core.channels',
-                'priority'  => 85,
+                'priority'  => 1,
+                'checks'    => [
+                    'integration' => [
+                        'ReusableTemplates' => [
+                            'enabled' => true,
+                        ],
+                    ],
+                ],
+            ],
+            'mautic.reusabletemplate.menu.emailparts' => [
+                'route'     => 'mautic_reusabletemplate_template_index',
+                'parent'    => 'mautic.reusabletemplate.menu.root',
+                'iconClass' => 'ri-file-copy-line',
+                'priority'  => 1,
                 'checks'    => [
                     'integration' => [
                         'ReusableTemplates' => [
@@ -47,6 +65,25 @@ return [
     ],
 
     'services' => [
+        'events' => [
+            'mautic.reusabletemplate.asset.subscriber' => [
+                'class' => MauticPlugin\MauticReusableTemplatesBundle\EventListener\AssetSubscriber::class,
+                'tags' => [
+                    'kernel.event_subscriber',
+                ],
+            ],
+        ],
+        'commands' => [
+            'mautic.reusabletemplate.command.process_changed' => [
+                'class' => MauticPlugin\MauticReusableTemplatesBundle\Command\ProcessChangedTemplatesCommand::class,
+                'arguments' => [
+                    'doctrine.orm.entity_manager',
+                ],
+                'tags' => [
+                    'console.command',
+                ],
+            ],
+        ],
         'integrations' => [
             'mautic.integration.reusabletemplates' => [
                 'class' => MauticPlugin\MauticReusableTemplatesBundle\Integration\ReusableTemplatesIntegration::class,

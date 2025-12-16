@@ -55,6 +55,9 @@ class TemplateModel extends FormModel
             }
         }
 
+        // Set changed flag to trigger email content update
+        $entity->setChanged(true);
+
         parent::saveEntity($entity, $unlock);
     }
 
