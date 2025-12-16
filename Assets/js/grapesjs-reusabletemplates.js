@@ -79,9 +79,33 @@
             }
 
             const blockId = 'reusable-template-' + template.id;
+            const componentType = blockId + '-component';
             console.log('Reusable Templates: Registering block:', blockId, 'for template:', template.name);
 
             try {
+                // Check if DomComponents exists
+                if (!editor.DomComponents) {
+                    console.error('Reusable Templates: DomComponents not available');
+                    return;
+                }
+
+                // Define component type for this template
+                editor.DomComponents.addType(componentType, {
+                    model: {
+                        defaults: {
+                            tagName: 'div',
+                            draggable: true,
+                            droppable: true,
+                            removable: true,
+                            copyable: true,
+                            attributes: {
+                                'data-reusable-template-id': template.id
+                            },
+                            content: template.content || '<p>Empty template</p>',
+                        }
+                    }
+                });
+
                 // Check if BlockManager exists
                 if (!editor.BlockManager) {
                     console.error('Reusable Templates: BlockManager not available');
@@ -92,7 +116,10 @@
                 editor.BlockManager.add(blockId, {
                     label: template.name || 'Unnamed Template',
                     category: 'Reusable Templates',
-                    content: template.content || '<p>Empty template</p>',
+                    content: {
+                        type: componentType,
+                        templateId: template.id
+                    },
                     media: '<i class="fa fa-puzzle-piece" style="font-size: 32px; color: #486AE2;"></i>',
                     attributes: {
                         title: 'Insert ' + (template.name || 'template'),

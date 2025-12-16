@@ -52,6 +52,12 @@ After installation and enabling the integration, you'll find the "Reusable" menu
 - **Delete**: Use the delete action to remove email parts you no longer need
 - **Search**: Use the search bar to find specific email parts by name
 
+### Using in GrapeJS Email Builder
+
+Once you've created reusable email parts, they will appear in the GrapeJS email builder under the "Reusable Templates" category. Simply drag and drop them into your email.
+
+![GrapeJS Buttons](Assets/buttons.png)
+
 ## Database Structure
 
 The plugin creates a `reusable_templates` table with the following fields:
