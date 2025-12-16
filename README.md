@@ -2,6 +2,8 @@
 
 A Mautic integration for managing reusable HTML email templates that can be used across different emails and campaigns.
 
+> **Note:** This is a Proof of Concept. There might be features that are not 100% finished.
+
 ## Features
 
 - Create and manage reusable HTML email parts
