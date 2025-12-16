@@ -12,7 +12,7 @@ return [
     'routes' => [
         'public' => [
             'mautic_reusabletemplate_api_templates' => [
-                'path'       => '/reusabletemplates/api/list',
+                'path'       => '/reusabletemplates/list',
                 'controller' => 'MauticPlugin\MauticReusableTemplatesBundle\Controller\ApiController::getTemplatesAction',
             ],
         ],
