@@ -47,17 +47,6 @@ return [
     ],
 
     'services' => [
-        'events' => [
-            'mautic.reusabletemplate.menu.subscriber' => [
-                'class' => MauticPlugin\MauticReusableTemplatesBundle\EventListener\MenuSubscriber::class,
-                'arguments' => [
-                    'mautic.integrations.helper',
-                ],
-                'tags' => [
-                    'kernel.event_subscriber',
-                ],
-            ],
-        ],
         'integrations' => [
             'mautic.integration.reusabletemplates' => [
                 'class' => MauticPlugin\MauticReusableTemplatesBundle\Integration\ReusableTemplatesIntegration::class,
