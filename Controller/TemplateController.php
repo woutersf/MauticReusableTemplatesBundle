@@ -320,9 +320,10 @@ class TemplateController extends FormController
 
         $searchPattern = 'data-reusablesectionId="' . $objectId . '"';
 
-        $sql = "SELECT id, name, email_type, subject
-                FROM emails
-                WHERE custom_html LIKE :pattern OR plain_text LIKE :pattern";
+        $sql = "SELECT gb.id, e.name, e.email_type, e.subject
+                FROM bundle_grapesjsbuilder gb
+                JOIN emails e ON gb.id = e.id
+                WHERE gb.custom_mjml LIKE :pattern";
 
         $stmt = $connection->prepare($sql);
         $stmt->bindValue('pattern', '%' . $searchPattern . '%');
@@ -373,10 +374,12 @@ class TemplateController extends FormController
         $connection = $em->getConnection();
 
         $searchPattern = 'data-reusablesectionId="' . $objectId . '"';
+        $newContent = $entity->getContent();
 
-        $sql = "SELECT id, custom_html, plain_text
-                FROM emails
-                WHERE custom_html LIKE :pattern OR plain_text LIKE :pattern";
+        // Query bundle_grapesjsbuilder table for emails using this template
+        $sql = "SELECT gb.id, gb.custom_mjml
+                FROM bundle_grapesjsbuilder gb
+                WHERE gb.custom_mjml LIKE :pattern";
 
         $stmt = $connection->prepare($sql);
         $stmt->bindValue('pattern', '%' . $searchPattern . '%');
@@ -386,7 +389,40 @@ class TemplateController extends FormController
         $replacementCount = 0;
 
         foreach ($emails as $email) {
-            $replacementCount++;
+            $customMjml = $email['custom_mjml'];
+
+            // Use DOMDocument to parse and replace the section
+            libxml_use_internal_errors(true);
+            $dom = new \DOMDocument();
+            $dom->loadHTML('<?xml encoding="utf-8" ?>' . $customMjml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+            libxml_clear_errors();
+
+            $xpath = new \DOMXPath($dom);
+            $nodes = $xpath->query('//*[@data-reusablesectionid="' . $objectId . '"]');
+
+            if ($nodes->length > 0) {
+                foreach ($nodes as $node) {
+                    // Create a document fragment with the new content
+                    $fragment = $dom->createDocumentFragment();
+                    $fragment->appendXML($newContent);
+
+                    // Replace the old node with new content
+                    $node->parentNode->replaceChild($fragment, $node);
+                }
+
+                // Save the updated MJML back to the database
+                $updatedMjml = $dom->saveHTML();
+                // Remove the XML declaration that was added
+                $updatedMjml = preg_replace('/<\?xml[^?]+\?>\s*/', '', $updatedMjml);
+
+                $updateSql = "UPDATE bundle_grapesjsbuilder SET custom_mjml = :mjml WHERE id = :id";
+                $updateStmt = $connection->prepare($updateSql);
+                $updateStmt->bindValue('mjml', $updatedMjml);
+                $updateStmt->bindValue('id', $email['id']);
+                $updateStmt->executeStatement();
+
+                $replacementCount++;
+            }
         }
 
         return $this->delegateView([

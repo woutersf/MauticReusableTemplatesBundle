@@ -91,23 +91,16 @@
 
                 // Define component type for this template
                 // Note: The template content itself should contain data-reusablesectionId attribute
-                // Map type to MJML tag name
-                const typeToTagMap = {
-                    'section': 'mj-section',
-                    'column': 'mj-column',
-                    'text': 'mj-text'
-                };
-                const tagName = typeToTagMap[template.type] || 'mj-section';
-
+                // The content already includes the proper MJML tags, so we don't add a wrapper
                 editor.DomComponents.addType(componentType, {
                     model: {
                         defaults: {
-                            tagName: tagName,
                             draggable: true,
                             droppable: true,
                             removable: true,
                             copyable: true,
-                            content: template.content || '',
+                            // Insert the raw HTML content directly without wrapping
+                            components: template.content || '',
                         }
                     }
                 });
@@ -119,13 +112,19 @@
                 }
 
                 // Add block to BlockManager
+                // Pass the raw HTML content directly instead of a component type
+                // Map type to category name
+                const typeToCategoryMap = {
+                    'section': 'Reusable Sections',
+                    'column': 'Reusable Columns',
+                    'text': 'Reusable Texts'
+                };
+                const category = typeToCategoryMap[template.type] || 'Reusable Templates';
+
                 editor.BlockManager.add(blockId, {
                     label: template.name || 'Unnamed Template',
-                    category: 'Reusable Templates',
-                    content: {
-                        type: componentType,
-                        templateId: template.id
-                    },
+                    category: category,
+                    content: template.content || '',
                     media: '<i class="fa fa-puzzle-piece" style="font-size: 32px; color: #486AE2;"></i>',
                     attributes: {
                         title: 'Insert ' + (template.name || 'template'),
