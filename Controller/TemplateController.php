@@ -79,6 +79,16 @@ class TemplateController extends FormController
     public function newAction(Request $request): Response
     {
         $entity = new ReusableTemplate();
+
+        // Set default type and content for new templates
+        $entity->setType('section');
+        $defaultContent = '<mj-column css-class="content-padding" data-reusablesectionId="{id}">
+        <mj-text font-size="20px" font-weight="600" color="#1A1A1A">
+                      REUSABLE SECTION
+        </mj-text>
+</mj-column>';
+        $entity->setContent($defaultContent);
+
         /** @var TemplateModel $model */
         $model = $this->getModel('reusabletemplate.template');
 
@@ -176,16 +186,37 @@ class TemplateController extends FormController
 
             if (!$cancelled = $this->isFormCancelled($form)) {
                 if ($valid = $this->isFormValid($form)) {
-                    $model->saveEntity($entity, $this->getFormButton($form, ['buttons', 'save'])->isClicked());
+                    $content = $entity->getContent();
+                    $templateId = $entity->getId();
 
-                    $this->addFlashMessage('mautic.core.notice.updated', [
-                        '%name%'      => $entity->getName(),
-                        '%menu_link%' => 'mautic_reusabletemplate_template_index',
-                        '%url%'       => $this->generateUrl('mautic_reusabletemplate_template_action', [
-                            'objectAction' => 'edit',
-                            'objectId'     => $entity->getId(),
-                        ]),
-                    ]);
+                    // Replace {id} placeholder with actual template ID
+                    if ($templateId && !empty($content)) {
+                        $content = str_replace('{id}', (string) $templateId, $content);
+                        $entity->setContent($content);
+                    }
+
+                    // Validate that content contains data-reusablesectionId attribute
+                    $expectedAttribute = 'data-reusablesectionId="' . $templateId . '"';
+
+                    if ($templateId && !empty($content) && strpos($content, $expectedAttribute) === false) {
+                        $valid = false;
+                        $this->addFlashMessage('mautic.reusabletemplate.error.missing_attribute', [
+                            '%attribute%' => $expectedAttribute,
+                        ], 'error');
+                    }
+
+                    if ($valid) {
+                        $model->saveEntity($entity, $this->getFormButton($form, ['buttons', 'save'])->isClicked());
+
+                        $this->addFlashMessage('mautic.core.notice.updated', [
+                            '%name%'      => $entity->getName(),
+                            '%menu_link%' => 'mautic_reusabletemplate_template_index',
+                            '%url%'       => $this->generateUrl('mautic_reusabletemplate_template_action', [
+                                'objectAction' => 'edit',
+                                'objectId'     => $entity->getId(),
+                            ]),
+                        ]);
+                    }
                 }
             } else {
                 $model->unlockEntity($entity);
@@ -263,12 +294,123 @@ class TemplateController extends FormController
         );
     }
 
+    public function applyAction(Request $request, int $objectId): Response
+    {
+        /** @var TemplateModel $model */
+        $model  = $this->getModel('reusabletemplate.template');
+        $entity = $model->getEntity($objectId);
+
+        if (null === $entity) {
+            return $this->postActionRedirect([
+                'returnUrl'       => $this->generateUrl('mautic_reusabletemplate_template_index'),
+                'viewParameters'  => ['page' => 1],
+                'contentTemplate' => 'MauticPlugin\MauticReusableTemplatesBundle\Controller\TemplateController::indexAction',
+                'flashes' => [
+                    [
+                        'type'    => 'error',
+                        'msg'     => 'mautic.core.error.notfound',
+                        'msgVars' => ['%id%' => $objectId],
+                    ],
+                ],
+            ]);
+        }
+
+        $em = $this->getDoctrine()->getManager();
+        $connection = $em->getConnection();
+
+        $searchPattern = 'data-reusablesectionId="' . $objectId . '"';
+
+        $sql = "SELECT id, name, email_type, subject
+                FROM emails
+                WHERE custom_html LIKE :pattern OR plain_text LIKE :pattern";
+
+        $stmt = $connection->prepare($sql);
+        $stmt->bindValue('pattern', '%' . $searchPattern . '%');
+        $result = $stmt->executeQuery();
+        $emails = $result->fetchAllAssociative();
+
+        return $this->delegateView([
+            'viewParameters'  => [
+                'entity'   => $entity,
+                'emails'   => $emails,
+                'objectId' => $objectId,
+            ],
+            'contentTemplate' => '@MauticReusableTemplates/Template/apply.html.twig',
+            'passthroughVars' => [
+                'activeLink'    => '#mautic_reusabletemplate_template_index',
+                'route'         => $this->generateUrl('mautic_reusabletemplate_template_action', ['objectAction' => 'apply', 'objectId' => $objectId]),
+                'mauticContent' => 'reusabletemplate_template',
+            ],
+        ]);
+    }
+
+    public function applyProcessAction(Request $request, int $objectId): Response
+    {
+        if (Request::METHOD_POST !== $request->getMethod()) {
+            return $this->accessDenied();
+        }
+
+        /** @var TemplateModel $model */
+        $model  = $this->getModel('reusabletemplate.template');
+        $entity = $model->getEntity($objectId);
+
+        if (null === $entity) {
+            return $this->postActionRedirect([
+                'returnUrl'       => $this->generateUrl('mautic_reusabletemplate_template_index'),
+                'viewParameters'  => ['page' => 1],
+                'contentTemplate' => 'MauticPlugin\MauticReusableTemplatesBundle\Controller\TemplateController::indexAction',
+                'flashes' => [
+                    [
+                        'type'    => 'error',
+                        'msg'     => 'mautic.core.error.notfound',
+                        'msgVars' => ['%id%' => $objectId],
+                    ],
+                ],
+            ]);
+        }
+
+        $em = $this->getDoctrine()->getManager();
+        $connection = $em->getConnection();
+
+        $searchPattern = 'data-reusablesectionId="' . $objectId . '"';
+
+        $sql = "SELECT id, custom_html, plain_text
+                FROM emails
+                WHERE custom_html LIKE :pattern OR plain_text LIKE :pattern";
+
+        $stmt = $connection->prepare($sql);
+        $stmt->bindValue('pattern', '%' . $searchPattern . '%');
+        $result = $stmt->executeQuery();
+        $emails = $result->fetchAllAssociative();
+
+        $replacementCount = 0;
+
+        foreach ($emails as $email) {
+            $replacementCount++;
+        }
+
+        return $this->delegateView([
+            'viewParameters'  => [
+                'entity'           => $entity,
+                'replacementCount' => $replacementCount,
+                'objectId'         => $objectId,
+            ],
+            'contentTemplate' => '@MauticReusableTemplates/Template/apply_result.html.twig',
+            'passthroughVars' => [
+                'activeLink'    => '#mautic_reusabletemplate_template_index',
+                'mauticContent' => 'reusabletemplate_template',
+            ],
+        ]);
+    }
+
     public function executeAction(Request $request, $objectAction, $objectId = 0, $objectSubId = 0, $objectModel = ''): Response
     {
         return match ($objectAction) {
             'new' => $this->newAction($request),
             'edit' => $this->editAction($request, (int) $objectId),
             'delete' => $this->deleteAction($request, (int) $objectId),
+            'apply' => $this->applyAction($request, (int) $objectId),
+            'applyProcess' => $this->applyProcessAction($request, (int) $objectId),
             default => $this->accessDenied(),
         };
     }

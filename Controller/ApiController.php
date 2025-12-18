@@ -41,6 +41,7 @@ class ApiController extends CommonController
                     'id' => $template->getId(),
                     'name' => $template->getName(),
                     'content' => $template->getContent(),
+                    'type' => $template->getType() ?? 'section',
                 ];
             }
 

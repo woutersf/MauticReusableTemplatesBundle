@@ -14,6 +14,7 @@ class ReusableTemplate
     private $id;
     private $name;
     private $content;
+    private $type;
     private $createdAt;
     private $updatedAt;
     private $updatedBy;
@@ -35,6 +36,11 @@ class ReusableTemplate
         $builder->createField('content', 'text')
             ->columnName('content')
             ->nullable()
+            ->build();
+
+        $builder->createField('type', 'string')
+            ->columnName('type')
+            ->length(20)
             ->build();
 
         $builder->createField('createdAt', 'datetime')
@@ -80,6 +86,17 @@ class ReusableTemplate
     public function setContent(?string $content): self
     {
         $this->content = $content;
+        return $this;
+    }
+
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): self
+    {
+        $this->type = $type;
         return $this;
     }
 

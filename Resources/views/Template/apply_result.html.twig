@@ -1,0 +1,22 @@
+{% extends '@MauticCore/Default/content.html.twig' %}
+{% block mauticContent %}reusabletemplate_template{% endblock %}
+
+{% block headerTitle %}Template Applied: {{ entity.getName() }}{% endblock %}
+
+{% block content %}
+    <div class="box-layout">
+        <div class="col-xs-12 height-auto bg-white">
+            <div class="pa-md">
+                <div class="alert alert-success">
+                    <i class="ri-check-circle-line"></i>
+                    <strong>Template replacements completed successfully!</strong>
+                    <p class="mb-0">{{ replacementCount }} email(s) were processed.</p>
+                </div>
+
+                <a href="{{ path('mautic_reusabletemplate_template_action', {'objectAction': 'edit', 'objectId': objectId}) }}" class="btn btn-primary">
+                    <i class="ri-arrow-left-line"></i> Back to Template
+                </a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

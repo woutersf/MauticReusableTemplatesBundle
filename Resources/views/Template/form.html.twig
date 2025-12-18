@@ -11,6 +11,14 @@
 
 {% block headerTitle %}{{ header }}{% endblock %}
 
+{% block actions %}
+    {% if objectId is not empty %}
+        <a href="{{ path('mautic_reusabletemplate_template_action', {'objectAction': 'apply', 'objectId': objectId}) }}" class="btn btn-default btn-nospin">
+            <i class="ri-mail-check-line"></i> Apply to emails
+        </a>
+    {% endif %}
+{% endblock %}
+
 {% block content %}
     {{ form_start(form) }}
     <div class="box-layout">
@@ -19,6 +27,11 @@
                 <div class="row">
                     <div class="col-md-12">
                         {{ form_row(form.name) }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        {{ form_row(form.type) }}
                     </div>
                 </div>
                 <div class="row">

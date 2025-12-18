@@ -90,18 +90,24 @@
                 }
 
                 // Define component type for this template
+                // Note: The template content itself should contain data-reusablesectionId attribute
+                // Map type to MJML tag name
+                const typeToTagMap = {
+                    'section': 'mj-section',
+                    'column': 'mj-column',
+                    'text': 'mj-text'
+                };
+                const tagName = typeToTagMap[template.type] || 'mj-section';
+
                 editor.DomComponents.addType(componentType, {
                     model: {
                         defaults: {
-                            tagName: 'div',
+                            tagName: tagName,
                             draggable: true,
                             droppable: true,
                             removable: true,
                             copyable: true,
-                            attributes: {
-                                'data-reusable-template-id': template.id
-                            },
-                            content: template.content || '<p>Empty template</p>',
+                            content: template.content || '',
                         }
                     }
                 });

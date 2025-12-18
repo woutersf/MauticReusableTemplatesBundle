@@ -59,6 +59,15 @@
             {{- include('@MauticCore/Helper/tableheader.html.twig',
                 {
                     'sessionVar' : 'reusabletemplate.template',
+                    'orderBy'    : 't.type',
+                    'text'       : 'Type',
+                    'class'      : 'visible-md visible-lg col-template-type',
+                }
+            ) -}}
+
+            {{- include('@MauticCore/Helper/tableheader.html.twig',
+                {
+                    'sessionVar' : 'reusabletemplate.template',
                     'orderBy'    : 't.createdAt',
                     'text'       : 'Create Date',
                     'class'      : 'visible-md visible-lg col-template-created',
@@ -96,6 +105,10 @@
                         {'objectAction' : 'edit', 'objectId' : item.getId()}) }}" data-toggle="ajax">
                         {{ item.getName() }}
                     </a>
+                </td>
+                <td class="visible-md visible-lg">
+                    {% set typeLabels = {'section': 'Section', 'column': 'Column', 'text': 'Text'} %}
+                    {{ typeLabels[item.getType()] ?? item.getType() }}
                 </td>
                 <td class="visible-md visible-lg">
                     {{ item.getCreatedAt()|date('Y-m-d H:i') }}

@@ -1,0 +1,55 @@
+{% extends '@MauticCore/Default/content.html.twig' %}
+{% block mauticContent %}reusabletemplate_template{% endblock %}
+
+{% block headerTitle %}Apply Template: {{ entity.getName() }}{% endblock %}
+
+{% block content %}
+    <div class="box-layout">
+        <div class="col-xs-12 height-auto bg-white">
+            <div class="pa-md">
+                <h3 class="mb-3">Emails Using This Template</h3>
+
+                {% if emails|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Email ID</th>
+                                    <th>Email Name</th>
+                                    <th>Email Type</th>
+                                    <th>Email Subject</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for email in emails %}
+                                    <tr>
+                                        <td>{{ email.id }}</td>
+                                        <td>{{ email.name }}</td>
+                                        <td>{{ email.email_type }}</td>
+                                        <td>{{ email.subject }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <form action="{{ path('mautic_reusabletemplate_template_action', {'objectAction': 'applyProcess', 'objectId': objectId}) }}" method="post" class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ri-check-line"></i> Apply
+                        </button>
+                        <a href="{{ path('mautic_reusabletemplate_template_action', {'objectAction': 'edit', 'objectId': objectId}) }}" class="btn btn-default">
+                            <i class="ri-arrow-left-line"></i> Back to Template
+                        </a>
+                    </form>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="ri-information-line"></i> No emails found using this template.
+                    </div>
+                    <a href="{{ path('mautic_reusabletemplate_template_action', {'objectAction': 'edit', 'objectId': objectId}) }}" class="btn btn-default">
+                        <i class="ri-arrow-left-line"></i> Back to Template
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
